@@ -262,7 +262,7 @@ fi
 
 # 询问是否接入Web控制台
 read -p "是否接入Web控制台? (y/N): " WEB_CONSOLE
-WEB_CONSOLE=${WEB_CONSOLE:-y}
+WEB_CONSOLE=${WEB_CONSOLE:-N}
 if [[ "$WEB_CONSOLE" == "Y" || "$WEB_CONSOLE" == "y" ]]; then
     read -p "请输入Web控制台地址: " WEB_CONSOLE_URL
     # 如果WEB_CONSOLE_URL为空，则重新询问，直到用户输入有效地址
