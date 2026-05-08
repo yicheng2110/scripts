@@ -4,6 +4,6 @@
 ### Easytier 一键安装脚本
 
 ``` shell
-bash <(curl -sSL [https://linuxmirrors.cn/main.sh](https://github.com/yicheng2110/scripts/raw/refs/heads/main/easytier.sh))
+bash <(curl -sSL https://github.com/yicheng2110/scripts/raw/refs/heads/main/easytier.sh)
 ```
 
