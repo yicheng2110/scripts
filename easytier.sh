@@ -263,7 +263,7 @@ fi
 # 询问是否接入Web控制台
 read -p "是否接入Web控制台? (y/N): " WEB_CONSOLE
 WEB_CONSOLE=${WEB_CONSOLE:-y}
-if [[ "$WEB_CONSOLE" == "Y" | "$WEB_CONSOLE" == "y" ]]; then
+if [[ "$WEB_CONSOLE" == "Y" || "$WEB_CONSOLE" == "y" ]]; then
     read -p "请输入Web控制台地址: " WEB_CONSOLE_URL
     # 如果WEB_CONSOLE_URL为空，则重新询问，直到用户输入有效地址
     while [[ -z "$WEB_CONSOLE_URL" ]]; do
@@ -273,7 +273,7 @@ fi
 
 info "正在注册系统服务..."
 # 如果用户选择了接入Web控制台，则覆盖配置中的节点地址
-if [[ "$WEB_CONSOLE" == "Y" | "$WEB_CONSOLE" == "y" ]]; then
+if [[ "$WEB_CONSOLE" == "Y" || "$WEB_CONSOLE" == "y" ]]; then
     echo "已选择接入Web控制台: $WEB_CONSOLE_URL"
     sudo easytier-cli service install -c /etc/easytier/config.toml -w $WEB_CONSOLE_URL
 else
