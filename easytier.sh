@@ -211,7 +211,20 @@ info "下载地址: $DOWNLOAD_URL"
 TMP_FILE=$(mktemp /tmp/easytier-XXXXXX.zip)
 curl -L -o "$TMP_FILE" "$DOWNLOAD_URL" || error "下载失败！"
 
-# --- 7. 解压并安装到指定目录 ---
+# --- 7. 清理已存在的旧服务 ---
+info "检查并清理旧的 EasyTier 服务..."
+
+## 检查是否存在旧服务, 执行/opt/easytier/easytier-cli service uninstall
+if sudo systemctl list-units --type=service --all | grep -q "easytier"; then
+    info "检测到旧的 EasyTier 服务，正在卸载..."
+    sudo /opt/easytier/easytier-cli service uninstall || warn "卸载旧服务失败，可能是因为服务未正确安装或已被删除。"
+    sudo systemctl daemon-reload
+    info "旧服务已卸载。"
+else
+    info "未检测到旧的 EasyTier 服务。"
+fi
+
+# --- 8. 解压并安装到指定目录 ---
 info "正在安装到 ${INSTALL_DIR} ..."
 sudo mkdir -p "$INSTALL_DIR"
 
@@ -242,19 +255,6 @@ sudo ln -sf "${INSTALL_DIR}/easytier-cli"  /usr/local/bin/easytier-cli
 # 清理临时文件
 rm -f "$TMP_FILE"
 rm -rf "$UNZIP_DIR"
-
-# --- 8. 清理已存在的旧服务 ---
-info "检查并清理旧的 EasyTier 服务..."
-
-## 检查是否存在旧服务, 执行/opt/easytier/easytier-cli service uninstall
-if sudo systemctl list-units --type=service --all | grep -q "easytier"; then
-    info "检测到旧的 EasyTier 服务，正在卸载..."
-    sudo /opt/easytier/easytier-cli service uninstall || warn "卸载旧服务失败，可能是因为服务未正确安装或已被删除。"
-    sudo systemctl daemon-reload
-    info "旧服务已卸载。"
-else
-    info "未检测到旧的 EasyTier 服务。"
-fi
 
 
 
