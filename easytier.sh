@@ -124,8 +124,8 @@ done
 read -p "请输入网络名称: " NET_NAME
 read -p "请输入网络密码: " NET_SECRET
 
-read -p "请输入程序安装目录 [默认: /opt/easytier]: " INSTALL_DIR
-INSTALL_DIR=${INSTALL_DIR:-/opt/easytier}
+# read -p "请输入程序安装目录 [默认: /opt/easytier]: " INSTALL_DIR
+INSTALL_DIR=/opt/easytier
 
 read -p "请输入配置模板文件路径 [默认: ./config.toml.template]: " TEMPLATE_FILE
 TEMPLATE_FILE=${TEMPLATE_FILE:-./config.toml.template}
@@ -245,27 +245,40 @@ rm -rf "$UNZIP_DIR"
 
 # --- 8. 清理已存在的旧服务 ---
 info "检查并清理旧的 EasyTier 服务..."
-if systemctl list-unit-files | grep -q '^easytier-core.service'; then
-    warn "发现已存在的 easytier-core 服务，正在停止并移除..."
-    sudo systemctl stop easytier-core.service 2>/dev/null || true
-    sudo systemctl disable easytier-core.service 2>/dev/null || true
-    # 尝试卸载（如果旧版 easytier-cli 可用）
-    if command -v easytier-cli &>/dev/null; then
-        sudo easytier-cli service uninstall 2>/dev/null || true
-    fi
-    # 手动清理残余的 systemd 文件
-    sudo rm -f /etc/systemd/system/easytier-core.service
-    sudo rm -f /usr/lib/systemd/system/easytier-core.service
-    sudo rm -f /etc/systemd/system/multi-user.target.wants/easytier-core.service
+
+## 检查是否存在旧服务, 执行/opt/easytier/easytier-cli service uninstall
+if sudo systemctl list-units --type=service --all | grep -q "easytier"; then
+    info "检测到旧的 EasyTier 服务，正在卸载..."
+    sudo /opt/easytier/easytier-cli service uninstall || warn "卸载旧服务失败，可能是因为服务未正确安装或已被删除。"
     sudo systemctl daemon-reload
-    info "旧服务已清理完毕。"
+    info "旧服务已卸载。"
 else
-    info "未发现已存在的服务。"
+    info "未检测到旧的 EasyTier 服务。"
 fi
 
+
+
 # --- 9. 注册并启动系统服务 ---
+
+# 询问是否接入Web控制台
+read -p "是否接入Web控制台? (y/N): " WEB_CONSOLE
+WEB_CONSOLE=${WEB_CONSOLE:-y}
+if [[ "$WEB_CONSOLE" == "Y" | "$WEB_CONSOLE" == "y" ]]; then
+    read -p "请输入Web控制台地址: " WEB_CONSOLE_URL
+    # 如果WEB_CONSOLE_URL为空，则重新询问，直到用户输入有效地址
+    while [[ -z "$WEB_CONSOLE_URL" ]]; do
+        read -p "Web控制台地址不能为空，请重新输入: " WEB_CONSOLE_URL
+    done
+fi
+
 info "正在注册系统服务..."
-sudo easytier-cli service install -c /etc/easytier/config.toml
+# 如果用户选择了接入Web控制台，则覆盖配置中的节点地址
+if [[ "$WEB_CONSOLE" == "Y" | "$WEB_CONSOLE" == "y" ]]; then
+    echo "已选择接入Web控制台: $WEB_CONSOLE_URL"
+    sudo easytier-cli service install -c /etc/easytier/config.toml -w $WEB_CONSOLE_URL
+else
+    sudo easytier-cli service install -c /etc/easytier/config.toml
+fi
 info "正在启动服务..."
 sudo easytier-cli service start
 
@@ -273,8 +286,8 @@ echo "=========================================="
 echo -e "${GREEN}[√] EasyTier 已作为系统服务安装并启动！${NC}"
 echo "程序路径: ${INSTALL_DIR}"
 echo "配置文件: /etc/easytier/config.toml"
-echo "查看状态: sudo systemctl status easytier-core"
-echo "查看日志: sudo journalctl -u easytier-core -f"
+echo "查看状态: sudo systemctl status easytier"
+echo "查看日志: sudo journalctl -u easytier -f"
 echo "=========================================="
 
 # 清理内部创建的临时模板（仅当它是我们生成的）
