@@ -67,6 +67,25 @@ case "$ARCH_RAW" in
 esac
 PATTERN="${OS_TYPE}-${ARCH_PATTERN}"
 
+# --- 参数解析 ---
+EASYTIER_NODE_OVERRIDE=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --easytier-node|-n)
+            if [[ -z "${2:-}" ]]; then
+                error "请为 $1 提供值"
+            fi
+            EASYTIER_NODE_OVERRIDE="$2"
+            shift 2
+            ;;
+        *)
+            echo "未知参数：$1"
+            echo "用法: $0 [--easytier-node <uri>] [-n <uri>]"
+            exit 1
+            ;;
+    esac
+done
+
 # --- 3. 用户交互输入 ---
 echo "=========================================="
 echo "    EasyTier 服务模式一键部署脚本"
@@ -92,8 +111,13 @@ INSTALL_DIR=${INSTALL_DIR:-/opt/easytier}
 read -p "请输入配置模板文件路径 [默认: ./config.toml.template]: " TEMPLATE_FILE
 TEMPLATE_FILE=${TEMPLATE_FILE:-./config.toml.template}
 
-read -p "请输入EasyTier节点地址: " EASYTIER_NODE
-EASYTIER_NODE=${EASYTIER_NODE:-tcp://0.0.0.0:11010}
+if [[ -n "$EASYTIER_NODE_OVERRIDE" ]]; then
+    EASYTIER_NODE="$EASYTIER_NODE_OVERRIDE"
+    info "已使用 --easytier-node 参数，节点地址: $EASYTIER_NODE"
+else
+    read -p "请输入EasyTier节点地址: " EASYTIER_NODE
+    EASYTIER_NODE=${EASYTIER_NODE:-tcp://0.0.0.0:11010}
+fi
 
 # --- 4. 安装依赖 ---
 install_deps
