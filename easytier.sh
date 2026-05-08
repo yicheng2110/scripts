@@ -71,16 +71,35 @@ PATTERN="${OS_TYPE}-${ARCH_PATTERN}"
 EASYTIER_NODE_OVERRIDE=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --easytier-node|-n)
+        --easytier-node=*)
+            EASYTIER_NODE_OVERRIDE="${1#*=}"
+            if [[ -z "$EASYTIER_NODE_OVERRIDE" ]]; then
+                error "请为 --easytier-node 提供值"
+            fi
+            shift
+            ;;
+        --easytier-node)
             if [[ -z "${2:-}" ]]; then
-                error "请为 $1 提供值"
+                error "请为 --easytier-node 提供值"
             fi
             EASYTIER_NODE_OVERRIDE="$2"
             shift 2
             ;;
+        -n*)
+            if [[ "$1" == "-n" ]]; then
+                if [[ -z "${2:-}" ]]; then
+                    error "请为 -n 提供值"
+                fi
+                EASYTIER_NODE_OVERRIDE="$2"
+                shift 2
+            else
+                EASYTIER_NODE_OVERRIDE="${1#-n}"
+                shift
+            fi
+            ;;
         *)
             echo "未知参数：$1"
-            echo "用法: $0 [--easytier-node <uri>] [-n <uri>]"
+            echo "用法: $0 [--easytier-node <uri>] [--easytier-node=<uri>] [-n <uri>] [-n<uri>]"
             exit 1
             ;;
     esac
